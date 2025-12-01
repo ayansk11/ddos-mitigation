@@ -1,0 +1,59 @@
+router bgp 65002
+ bgp router-id 2.2.2.2
+
+ ! eBGP peering to ISP R1
+ neighbor 192.0.2.1 remote-as 65001
+
+ address-family ipv4 unicast
+  neighbor 192.0.2.1 activate
+
+  !
+  ! Advertise victim /32 with a special "blackhole" community.
+  ! 65535:666 is an example; ISP R1 will treat this as RTBH trigger.
+  !
+  network 10.0.0.2/32 route-map SET_BLACKHOLE_COMMUNITY
+ exit-address-family
+
+!
+! Route-map to attach blackhole BGP community to 10.0.0.2/32
+!
+route-map SET_BLACKHOLE_COMMUNITY permit 10
+ match ip address prefix-list VICTIM_PREFIX
+ set community 65535:666 additive
+
+ip prefix-list VICTIM_PREFIX permit 10.0.0.2/32
+
+
+router bgp 65001
+ bgp router-id 1.1.1.1
+
+ ! eBGP peering to customer R2
+ neighbor 192.0.2.2 remote-as 65002
+
+ address-family ipv4 unicast
+  neighbor 192.0.2.2 activate
+
+  !
+  ! For any route with community 65535:666,
+  ! set next-hop to Null0 (discard traffic).
+  !
+  neighbor 192.0.2.2 route-map BLACKHOLE_IN in
+ exit-address-family
+
+!
+! Route-map used to "blackhole" traffic
+!
+route-map BLACKHOLE_IN permit 10
+ match community BLACKHOLE_COMMUNITY
+ set ip next-hop 192.0.2.254
+
+!
+! Community list that matches the RTBH trigger community
+!
+ip community-list standard BLACKHOLE_COMMUNITY permit 65535:666
+
+!
+! Static route to Null0 used as blackhole
+! (192.0.2.254/32 is just a dummy next-hop pointing to Null0 here)
+!
+ip route 192.0.2.254/32 Null0
