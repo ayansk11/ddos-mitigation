@@ -200,7 +200,7 @@ vtysh -f bgp/rtbh.rules
 
 ## Course Context
 
-Developed as a project for the **Security for Networked Systems** Course at **Indiana University Bloomington**.
+Developed as a project for the **Security for Networked Systems** course at **Indiana University Bloomington**.
 
 ---
 
