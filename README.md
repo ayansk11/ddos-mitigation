@@ -8,13 +8,13 @@
 ![BGP](https://img.shields.io/badge/BGP-FRR-orange)
 ![Platform](https://img.shields.io/badge/Tested%20on-Jetstream2-purple)
 
-A defense-in-depth DDoS mitigation system that operates across three layers of the network stack — from kernel-level packet filtering to ISP-scale upstream traffic suppression. Built and tested on **Jetstream2 cloud VMs** with real packet flows.
+A defense-in-depth DDoS mitigation system that operates across three layers of the network stack, from kernel-level packet filtering to ISP-scale upstream traffic suppression. Built and tested on **Jetstream2 cloud VMs** with real packet flows.
 
 ---
 
 ## Problem
 
-Distributed Denial-of-Service (DDoS) attacks flood networks with millions of packets per second. Traditional firewalls and routers can't keep up. A single point of defense is never enough — attackers adapt, and volumetric floods can saturate any single chokepoint.
+Distributed Denial-of-Service (DDoS) attacks flood networks with millions of packets per second. Traditional firewalls and routers can't keep up. A single point of defense is never enough; attackers adapt, and volumetric floods can saturate any single chokepoint.
 
 ## Solution
 
@@ -22,32 +22,32 @@ This project implements **three independent, complementary defense tiers** using
 
 ```
                     ┌─────────────────────────────────────────────┐
-                    │              INTERNET / ATTACKER             │
+                    │              INTERNET / ATTACKER            │
                     └──────────────────┬──────────────────────────┘
                                        │
-                    ┌──────────────────▼──────────────────────────┐
-                    │  TIER 3: BGP FlowSpec / RTBH                │
+                    ┌──────────────────▼───────────────────────────┐
+                    │  TIER 3: BGP FlowSpec / RTBH                 │
                     │  ISP upstream filtering                      │
                     │  → Discard traffic before it reaches network │
                     │  → Remote Triggered Black Hole routing       │
-                    └──────────────────┬──────────────────────────┘
+                    └──────────────────┬───────────────────────────┘
                                        │
-                    ┌──────────────────▼──────────────────────────┐
+                    ┌──────────────────▼───────────────────────────┐
                     │  TIER 2: P4 Programmable Switch              │
                     │  In-network detection (BMv2)                 │
                     │  → Per-flow counters with threshold          │
                     │  → Drop + mirror suspect traffic             │
-                    └──────────────────┬──────────────────────────┘
+                    └──────────────────┬───────────────────────────┘
                                        │
-                    ┌──────────────────▼──────────────────────────┐
-                    │  TIER 1: XDP/eBPF (Linux Kernel)            │
+                    ┌──────────────────▼───────────────────────────┐
+                    │  TIER 1: XDP/eBPF (Linux Kernel)             │
                     │  Earliest possible interception              │
                     │  → Per-source-IP rate limiting               │
                     │  → ~10M packets/sec on bare metal            │
-                    └──────────────────┬──────────────────────────┘
+                    └──────────────────┬───────────────────────────┘
                                        │
                     ┌──────────────────▼──────────────────────────┐
-                    │              PROTECTED SERVER                 │
+                    │              PROTECTED SERVER               │
                     └─────────────────────────────────────────────┘
 ```
 
@@ -57,7 +57,7 @@ This project implements **three independent, complementary defense tiers** using
 
 ### Tier 1: XDP DDoS Filter (Linux Kernel)
 
-The first line of defense — runs **before** the Linux TCP/IP stack even processes the packet.
+The first line of defense runs **before** the Linux TCP/IP stack even processes the packet.
 
 - **Technology:** XDP (eXpress Data Path) + eBPF
 - **Mechanism:** Per-source-IP sliding window rate limiting using BPF hash maps
@@ -75,7 +75,7 @@ if (st->pkt_count > THRESHOLD_PKTS) {
 
 ### Tier 2: P4-Based Detection (BMv2 Switch)
 
-In-network detection at the switch dataplane — catches what gets past Tier 1.
+In-network detection at the switch dataplane catches what gets past Tier 1.
 
 - **Technology:** P4 (v1model) on BMv2 behavioral model
 - **Mechanism:** Per-flow packet counters using P4 registers (1024 flows)
@@ -171,7 +171,7 @@ vtysh -f bgp/rtbh.rules
 |----------|-----------|
 | XDP over iptables | XDP processes packets before the kernel network stack, achieving 10x+ throughput |
 | Per-source-IP tracking (Tier 1) | Identifies individual attackers in volumetric floods |
-| Per-flow tracking (Tier 2) | Catches coordinated attacks from varying sources targeting same destination |
+| Per-flow tracking (Tier 2) | Catches coordinated attacks from varying sources targeting the same destination |
 | BGP community 65535:666 for RTBH | Industry-standard trigger community recognized by major ISPs |
 | Three independent tiers | Defense-in-depth — each tier operates independently, no single point of failure |
 
@@ -200,7 +200,7 @@ vtysh -f bgp/rtbh.rules
 
 ## Course Context
 
-Developed as a project for **Security for Networked Systems** at **Indiana University Bloomington**.
+Developed as a project for the **Security for Networked Systems** Course at **Indiana University Bloomington**.
 
 ---
 
